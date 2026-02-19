@@ -1,8 +1,18 @@
 FROM richarvey/nginx-php-fpm:latest
+
+WORKDIR /var/www/html
+
+COPY composer.json composer.lock ./
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
 COPY . .
+
 # Image config
 ENV WEBROOT /var/www/html/public
 ENV APP_ENV production
 ENV APP_DEBUG false
-RUN composer install --no-dev
+
+RUN mkdir -p storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+
 CMD ["/start.sh"]
