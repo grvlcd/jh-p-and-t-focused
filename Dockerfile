@@ -12,9 +12,7 @@ ENV WEBROOT /var/www/html/public
 ENV APP_ENV production
 ENV APP_DEBUG false
 
-RUN php artisan package:discover --ansi
-
 RUN mkdir -p storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-CMD ["/start.sh"]
+CMD ["bash", "scripts/00-laravel-deploy.sh"]
