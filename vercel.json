@@ -1,47 +1,29 @@
 {
-    "installCommand": "dnf install -y php php-cli php-common php-json php-mbstring php-xml php-zip && (curl -sS https://getcomposer.org/installer | php && php composer.phar install --no-dev --optimize-autoloader --ignore-platform-reqs) && npm ci",
-    "buildCommand": "npm run build && mkdir -p dist/build && cp -r public/build/. dist/build/",
-    "outputDirectory": "dist",
+    "version": 2,
     "framework": null,
     "functions": {
-        "api/index.php": {
-            "runtime": "vercel-php@0.7.4"
-        }
+        "api/index.php": { "runtime": "vercel-php@0.6.0" }
     },
-    "rewrites": [
+    "routes": [
         {
-            "source": "/build/(.*)",
-            "destination": "/build/$1"
-        },
-        {
-            "source": "/favicon.ico",
-            "destination": "/favicon.ico"
-        },
-        {
-            "source": "/server-api/:path*",
-            "destination": "/api/index.php?path=:path*"
-        },
-        {
-            "source": "/api/:path*",
-            "destination": "/api/index.php?path=:path*"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "/api/index.php"
+            "src": "/(.*)",
+            "dest": "/api/index.php"
         }
     ],
     "env": {
         "APP_ENV": "production",
-        "APP_DEBUG": "false",
+        "APP_DEBUG": "true",
+        "APP_URL": "https://yourprojectdomain.com",
+
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
         "APP_ROUTES_CACHE": "/tmp/routes.php",
         "APP_SERVICES_CACHE": "/tmp/services.php",
-        "APP_VIEWS_CACHE": "/tmp/views",
-        "CACHE_STORE": "array",
+        "VIEW_COMPILED_PATH": "/tmp",
+
+        "CACHE_DRIVER": "array",
         "LOG_CHANNEL": "stderr",
-        "SESSION_DRIVER": "cookie",
-        "VIEW_COMPILED_PATH": "/tmp/views"
+        "SESSION_DRIVER": "cookie"
     }
 }
