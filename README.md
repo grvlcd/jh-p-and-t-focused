@@ -1,60 +1,172 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## About
 
-## About Laravel
+Laravel application with protocols, threads, comments, reviews, and voting. Search is powered by Typesense (protocols and threads are indexed for full-text search).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Setup instructions
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Requirements
 
-## Learning Laravel
+- PHP 8.3+
+- Composer
+- MySQL (or SQLite/PostgreSQL)
+- [Typesense](https://typesense.org) (optional; for search)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Local setup
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. **Clone and install PHP dependencies**
 
-## Laravel Sponsors
+    ```bash
+    git clone <repo-url>
+    cd example-app
+    composer install
+    ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+2. **Environment**
 
-### Premium Partners
+    ```bash
+    cp .env.example .env
+    php artisan key:generate
+    ```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+    Edit `.env`: set `DB_*` for your database, and optionally Typesense (see [Typesense key/config setup](#typesense-keyconfig-setup)).
 
-## Contributing
+3. **Database**
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    ```bash
+    php artisan migrate:fresh --seed
+    ```
 
-## Code of Conduct
+4. **Run the app**
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+    ```bash
+    php artisan serve
+    ```
 
-## Security Vulnerabilities
+    Open `http://localhost:8000`. Health check: `http://localhost:8000/up`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### With Docker (e.g. for Render)
+
+- Use the included `Dockerfile`. Build: `docker build -t example-app .`
+- Run: `docker run -p 8000:8000 -e APP_KEY=base64:... -e PORT=8000 example-app`
+- Set all required env vars (see `.env.example`). For migrations on deploy, use a release/pre-deploy command: `php artisan migrate --force`.
+
+---
+
+## API overview
+
+Base URL: **`/api`**. All responses are JSON.
+
+### Authentication (Sanctum)
+
+| Method | Path            | Auth | Description                                                                              |
+| ------ | --------------- | ---- | ---------------------------------------------------------------------------------------- |
+| `POST` | `/api/register` | No   | Register: `name`, `email`, `password`, `password_confirmation`. Returns `token`, `user`. |
+| `POST` | `/api/login`    | No   | Login: `email`, `password`. Returns `token`, `user`.                                     |
+| `GET`  | `/api/user`     | Yes  | Current user.                                                                            |
+| `POST` | `/api/logout`   | Yes  | Revoke current token.                                                                    |
+
+Use the token in the `Authorization` header: `Bearer <token>`.
+
+### Protocols
+
+| Method   | Path                  | Auth | Description                                                                                                |
+| -------- | --------------------- | ---- | ---------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/protocols`      | No   | List protocols. Query: `search`, `sort` (`recent`, `most_reviewed`, `highest_rated`), `per_page` (max 50). |
+| `GET`    | `/api/protocols/{id}` | No   | Single protocol with threads and reviews.                                                                  |
+| `POST`   | `/api/protocols`      | Yes  | Create: `title`, `content`, optional `tags[]`, `rating`.                                                   |
+| `PUT`    | `/api/protocols/{id}` | Yes  | Update protocol.                                                                                           |
+| `DELETE` | `/api/protocols/{id}` | Yes  | Delete protocol.                                                                                           |
+
+### Threads
+
+| Method   | Path                | Auth | Description                                     |
+| -------- | ------------------- | ---- | ----------------------------------------------- |
+| `GET`    | `/api/threads`      | No   | List threads. Query: `protocol_id`, `per_page`. |
+| `GET`    | `/api/threads/{id}` | No   | Single thread with protocol, author, comments.  |
+| `PUT`    | `/api/threads/{id}` | Yes  | Update thread (owner only).                     |
+| `POST`   | `/api/threads`      | Yes  | Create: `protocol_id`, `title`, `body`.         |
+| `DELETE` | `/api/threads/{id}` | Yes  | Delete thread (owner only).                     |
+
+### Comments
+
+| Method   | Path                         | Auth | Description                                        |
+| -------- | ---------------------------- | ---- | -------------------------------------------------- |
+| `GET`    | `/api/threads/{id}/comments` | No   | Comments for a thread.                             |
+| `POST`   | `/api/comments`              | Yes  | Create: `thread_id`, `body`, optional `parent_id`. |
+| `PUT`    | `/api/comments/{id}`         | Yes  | Update comment.                                    |
+| `DELETE` | `/api/comments/{id}`         | Yes  | Delete own comment.                                |
+
+### Reviews
+
+| Method   | Path                          | Auth | Description                                              |
+| -------- | ----------------------------- | ---- | -------------------------------------------------------- |
+| `GET`    | `/api/protocols/{id}/reviews` | No   | Reviews for a protocol.                                  |
+| `POST`   | `/api/reviews`                | Yes  | Create/update: `protocol_id`, `rating`, optional `body`. |
+| `PUT`    | `/api/reviews/{id}`           | Yes  | Update review.                                           |
+| `DELETE` | `/api/reviews/{id}`           | Yes  | Delete review.                                           |
+
+### Votes
+
+| Method | Path                      | Auth | Description                             |
+| ------ | ------------------------- | ---- | --------------------------------------- |
+| `POST` | `/api/threads/{id}/vote`  | Yes  | Vote on thread: `value` (`1` or `-1`).  |
+| `POST` | `/api/comments/{id}/vote` | Yes  | Vote on comment: `value` (`1` or `-1`). |
+
+---
+
+## Typesense key/config setup
+
+Search uses [Typesense](https://typesense.org). Protocols and threads are indexed for full-text search; the protocol list endpoint uses Typesense when configured and falls back to SQL `LIKE` when not.
+
+### Environment variables
+
+In `.env` (or your deployment env):
+
+| Variable                        | Description                                           | Example                                       |
+| ------------------------------- | ----------------------------------------------------- | --------------------------------------------- |
+| `TYPESENSE_HOST`                | Typesense server hostname                             | `xxx.a1.typesense.net` (Cloud) or `localhost` |
+| `TYPESENSE_PORT`                | Port (usually 443 for Cloud)                          | `443`                                         |
+| `TYPESENSE_PROTOCOL`            | `https` or `http`                                     | `https`                                       |
+| `TYPESENSE_ADMIN_API_KEY`       | Admin API key (create collections, index/delete docs) | Keep secret; server-side only.                |
+| `TYPESENSE_SEARCH_ONLY_API_KEY` | Search-only key (optional; for client-side search)    | Can be exposed if you search from the client. |
+
+Config is in **`config/typesense.php`** (host, port, protocol, keys, and collection names `protocols` and `threads`).
+
+### Getting keys
+
+- **Typesense Cloud:** Create a cluster at [cloud.typesense.org](https://cloud.typesense.org). In the dashboard you get host, port, and an admin API key. Create a search-only key if needed.
+- **Self-hosted:** Run Typesense yourself and generate an API key; use your server host/port and `http` if local.
+
+### After configuration
+
+1. **Verify connection and collections**
+
+    ```bash
+    php artisan typesense:verify
+    ```
+
+    This checks connectivity and that the `protocols` and `threads` collections exist (they are created by the app when missing).
+
+2. **Index existing data**
+
+    ```bash
+    php artisan typesense:index-all
+    ```
+
+    Run after deploy or when you add Typesense to an existing database. New/updated protocols and threads are indexed automatically via model observers.
+
+3. **Test search (optional)**
+
+    ```bash
+    php artisan typesense:test-search "your query"
+    ```
+
+---
 
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# jh-p-and-t-focused
