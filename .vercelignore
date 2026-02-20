@@ -1,0 +1,14 @@
+/vendor
+/node_modules
+.git
+.env
+.env.*
+!.env.example
+*.log
+.phpunit.result.cache
+.phpunit.cache
+Homestead.json
+Homestead.yaml
+tests
+phpunit.xml
+.phpactor.json

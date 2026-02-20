@@ -1,0 +1,28 @@
+{
+    "buildCommand": "composer install --no-dev --optimize-autoloader --no-interaction && npm run build && php artisan migrate --force",
+    "framework": null,
+    "functions": {
+        "api/index.php": {
+            "runtime": "vercel-php@0.7.4"
+        }
+    },
+    "rewrites": [
+        { "source": "/build/(.*)", "destination": "/build/$1" },
+        { "source": "/favicon.ico", "destination": "/favicon.ico" },
+        { "source": "/(.*)", "destination": "/api/index.php" }
+    ],
+    "env": {
+        "APP_ENV": "production",
+        "APP_DEBUG": "false",
+        "APP_CONFIG_CACHE": "/tmp/config.php",
+        "APP_EVENTS_CACHE": "/tmp/events.php",
+        "APP_PACKAGES_CACHE": "/tmp/packages.php",
+        "APP_ROUTES_CACHE": "/tmp/routes.php",
+        "APP_SERVICES_CACHE": "/tmp/services.php",
+        "APP_VIEWS_CACHE": "/tmp/views",
+        "CACHE_STORE": "array",
+        "LOG_CHANNEL": "stderr",
+        "SESSION_DRIVER": "cookie",
+        "VIEW_COMPILED_PATH": "/tmp/views"
+    }
+}
