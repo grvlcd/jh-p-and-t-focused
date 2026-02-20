@@ -1,7 +1,14 @@
 <?php
 
-// Vercel routes/rewrites send requests here. Rebuild REQUEST_URI so Laravel sees the original path (e.g. /api/login).
-if (isset($_GET['path']) && is_string($_GET['path'])) {
+// Vercel rewrites send requests here. Rebuild REQUEST_URI so Laravel sees the original path (e.g. /api/register).
+$originalUri = $_SERVER['HTTP_X_VERCEL_ORIGINAL_URL'] ?? $_SERVER['HTTP_X_ORIGINAL_URL'] ?? null;
+if ($originalUri !== null && $originalUri !== '') {
+    $path = parse_url($originalUri, PHP_URL_PATH) ?: $originalUri;
+    $query = parse_url($originalUri, PHP_URL_QUERY);
+    $_SERVER['REQUEST_URI'] = $query ? $path.'?'.$query : $path;
+    $_SERVER['PATH_INFO'] = $path;
+    $_SERVER['QUERY_STRING'] = $query ?? '';
+} elseif (isset($_GET['path']) && is_string($_GET['path'])) {
     $path = '/api/'.trim($_GET['path'], '/');
     $params = $_GET;
     unset($params['path']);
@@ -10,19 +17,9 @@ if (isset($_GET['path']) && is_string($_GET['path'])) {
     $_SERVER['PATH_INFO'] = $path;
     $_SERVER['QUERY_STRING'] = $query;
     $_GET = $params;
-} elseif (isset($_SERVER['REQUEST_URI']) && (
-    $_SERVER['REQUEST_URI'] === '/api/index.php'
-    || str_ends_with($_SERVER['REQUEST_URI'], '/api/index.php')
-)) {
-    $original = $_SERVER['HTTP_X_ORIGINAL_URL'] ?? $_SERVER['HTTP_X_VERCEL_ORIGINAL_URL'] ?? null;
-    if ($original !== null) {
-        $_SERVER['REQUEST_URI'] = parse_url($original, PHP_URL_PATH) ?: $original;
-        if (!empty($_SERVER['QUERY_STRING'])) {
-            $_SERVER['REQUEST_URI'] .= '?'.$_SERVER['QUERY_STRING'];
-        }
-    } else {
-        $_SERVER['REQUEST_URI'] = empty($_SERVER['QUERY_STRING']) ? '/' : '/?'.$_SERVER['QUERY_STRING'];
-    }
+} elseif (isset($_SERVER['REQUEST_URI']) && str_contains($_SERVER['REQUEST_URI'], '/api/index.php')) {
+    $_SERVER['REQUEST_URI'] = empty($_SERVER['QUERY_STRING']) ? '/' : '/?'.$_SERVER['QUERY_STRING'];
+    $_SERVER['PATH_INFO'] = '/';
 }
 
 require __DIR__.'/../public/index.php';
