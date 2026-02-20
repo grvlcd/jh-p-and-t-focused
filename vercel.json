@@ -1,9 +1,13 @@
 {
+    "installCommand": "composer install --no-dev --optimize-autoloader && npm ci",
     "buildCommand": "npm run build && mkdir -p dist/build && cp -r public/build/. dist/build/",
     "outputDirectory": "dist",
     "framework": null,
     "functions": {
         "api/index.php": {
+            "runtime": "vercel-php@0.7.4"
+        },
+        "api/*.php": {
             "runtime": "vercel-php@0.7.4"
         }
     },
