@@ -1,8 +1,17 @@
 <?php
 
-// When Vercel rewrites e.g. /api/user to /api/index.php, the runtime may pass the
-// rewritten path. Restore the original path so Laravel can route correctly.
-if (isset($_SERVER['REQUEST_URI']) && (
+// Vercel rewrites /api/:path* to /api/index.php and passes the path as a query param.
+// Rebuild REQUEST_URI so Laravel receives the original path (e.g. /api/login).
+if (isset($_GET['path']) && is_string($_GET['path'])) {
+    $path = '/api/'.trim($_GET['path'], '/');
+    $params = $_GET;
+    unset($params['path']);
+    $_SERVER['REQUEST_URI'] = $path.(empty($params) ? '' : '?'.http_build_query($params));
+    $_SERVER['QUERY_STRING'] = http_build_query($params);
+    $_GET = $params;
+}
+// Fallback: if runtime passed rewritten path and we have an original-URL header, use it.
+elseif (isset($_SERVER['REQUEST_URI']) && (
     $_SERVER['REQUEST_URI'] === '/api/index.php'
     || str_ends_with($_SERVER['REQUEST_URI'], '/api/index.php')
 )) {
