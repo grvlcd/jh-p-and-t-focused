@@ -4,11 +4,9 @@
     "functions": {
         "api/index.php": { "runtime": "vercel-php@0.8.0" }
     },
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "/api/index.php"
-        }
+    "rewrites": [
+        { "source": "/api/:path*", "destination": "/api/index.php?path=:path*" },
+        { "source": "/(.*)", "destination": "/api/index.php" }
     ],
     "env": {
         "APP_ENV": "production",
