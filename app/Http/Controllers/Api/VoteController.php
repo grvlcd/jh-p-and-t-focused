@@ -18,8 +18,11 @@ class VoteController extends Controller
     {
         $result = $this->storeOrUpdateVote($request, $thread);
 
+        $votesSum = (int) $thread->votes()->sum('value');
+
         return response()->json([
             'value' => $result ? $result->value : null,
+            'votes_sum' => $votesSum,
         ]);
     }
 
@@ -27,8 +30,11 @@ class VoteController extends Controller
     {
         $result = $this->storeOrUpdateVote($request, $comment);
 
+        $votesSum = (int) $comment->votes()->sum('value');
+
         return response()->json([
             'value' => $result ? $result->value : null,
+            'votes_sum' => $votesSum,
         ]);
     }
 

@@ -22,9 +22,23 @@ class CommentController extends Controller
             ->withSum('votes as votes_sum', 'value')
             ->get();
 
-        // Load user's votes for comments if authenticated
+        $commentIds = $comments->pluck('id');
+        if ($commentIds->isNotEmpty()) {
+            $commentVotes = \App\Models\Vote::query()
+                ->where('votable_type', \App\Models\Comment::class)
+                ->whereIn('votable_id', $commentIds)
+                ->get();
+
+            $upByComment = $commentVotes->where('value', 1)->groupBy('votable_id');
+            $downByComment = $commentVotes->where('value', -1)->groupBy('votable_id');
+
+            foreach ($comments as $comment) {
+                $comment->upvoted_by_user_ids = ($upByComment->get($comment->id) ?? collect())->pluck('user_id')->values()->all();
+                $comment->downvoted_by_user_ids = ($downByComment->get($comment->id) ?? collect())->pluck('user_id')->values()->all();
+            }
+        }
+
         if ($request->user()) {
-            $commentIds = $comments->pluck('id');
             $userVotes = \App\Models\Vote::query()
                 ->where('user_id', $request->user()->id)
                 ->where('votable_type', \App\Models\Comment::class)

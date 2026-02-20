@@ -73,11 +73,29 @@ class ProtocolController extends Controller
      */
     public function show(Request $request, Protocol $protocol): JsonResponse
     {
-        $protocol->load(['author', 'threads', 'reviews']);
+        $protocol->load([
+            'author',
+            'threads' => fn ($q) => $q->withSum('votes as votes_sum', 'value'),
+            'reviews',
+        ]);
 
-        // Load user's votes for threads if authenticated
+        $threadIds = $protocol->threads->pluck('id');
+        if ($threadIds->isNotEmpty()) {
+            $threadVotes = \App\Models\Vote::query()
+                ->where('votable_type', \App\Models\Thread::class)
+                ->whereIn('votable_id', $threadIds)
+                ->get();
+
+            $upByThread = $threadVotes->where('value', 1)->groupBy('votable_id');
+            $downByThread = $threadVotes->where('value', -1)->groupBy('votable_id');
+
+            foreach ($protocol->threads as $thread) {
+                $thread->upvoted_by_user_ids = ($upByThread->get($thread->id) ?? collect())->pluck('user_id')->values()->all();
+                $thread->downvoted_by_user_ids = ($downByThread->get($thread->id) ?? collect())->pluck('user_id')->values()->all();
+            }
+        }
+
         if ($request->user()) {
-            $threadIds = $protocol->threads->pluck('id');
             $userVotes = \App\Models\Vote::query()
                 ->where('user_id', $request->user()->id)
                 ->where('votable_type', \App\Models\Thread::class)
