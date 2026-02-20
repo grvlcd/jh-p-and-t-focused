@@ -10,7 +10,7 @@ if (isset($_GET['path']) && is_string($_GET['path'])) {
     $_SERVER['QUERY_STRING'] = http_build_query($params);
     $_GET = $params;
 }
-// Fallback: if runtime passed rewritten path and we have an original-URL header, use it.
+// Fallback: runtime passed rewritten path; try header or default to root.
 elseif (isset($_SERVER['REQUEST_URI']) && (
     $_SERVER['REQUEST_URI'] === '/api/index.php'
     || str_ends_with($_SERVER['REQUEST_URI'], '/api/index.php')
@@ -21,6 +21,9 @@ elseif (isset($_SERVER['REQUEST_URI']) && (
         if (! empty($_SERVER['QUERY_STRING'])) {
             $_SERVER['REQUEST_URI'] .= '?'.$_SERVER['QUERY_STRING'];
         }
+    } else {
+        // No path param: assume root (e.g. catch-all for /).
+        $_SERVER['REQUEST_URI'] = empty($_SERVER['QUERY_STRING']) ? '/' : '/?'.$_SERVER['QUERY_STRING'];
     }
 }
 

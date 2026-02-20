@@ -17,6 +17,10 @@
             "destination": "/favicon.ico"
         },
         {
+            "source": "/server-api/:path*",
+            "destination": "/api/index.php?path=:path*"
+        },
+        {
             "source": "/api/:path*",
             "destination": "/api/index.php?path=:path*"
         },
