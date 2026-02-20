@@ -19,7 +19,7 @@ class VoteFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'value' => \fake()->randomElement([-1, 1]),
+            'value' => $this->faker->randomElement([-1, 1]),
         ];
     }
 }

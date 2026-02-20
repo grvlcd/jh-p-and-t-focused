@@ -19,7 +19,7 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            'body' => \fake()->paragraph(),
+            'body' => $this->faker->paragraph(),
             'thread_id' => Thread::factory(),
             'user_id' => User::factory(),
             'parent_id' => null,

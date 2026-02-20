@@ -21,8 +21,8 @@ class ReviewFactory extends Factory
         return [
             'protocol_id' => Protocol::factory(),
             'user_id' => User::factory(),
-            'rating' => \fake()->numberBetween(1, 5),
-            'feedback' => \fake()->boolean(70) ? \fake()->sentences(2, true) : null,
+            'rating' => $this->faker->numberBetween(1, 5),
+            'feedback' => $this->faker->boolean(70) ? $this->faker->sentences(2, true) : null,
         ];
     }
 }
