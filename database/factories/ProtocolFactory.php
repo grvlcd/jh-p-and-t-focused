@@ -18,9 +18,9 @@ class ProtocolFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => fake()->sentence(6),
-            'content' => fake()->paragraphs(4, true),
-            'tags' => fake()->randomElements(
+            'title' => \fake()->sentence(6),
+            'content' => \fake()->paragraphs(4, true),
+            'tags' => \fake()->randomElements(
                 [
                     'clinical',
                     'survey',
@@ -31,10 +31,10 @@ class ProtocolFactory extends Factory
                     'psychology',
                     'machine-learning',
                 ],
-                fake()->numberBetween(2, 4),
+                \fake()->numberBetween(2, 4),
             ),
             'author_id' => User::factory(),
-            'rating' => fake()->randomFloat(1, 2, 5),
+            'rating' => \fake()->randomFloat(1, 2, 5),
         ];
     }
 }

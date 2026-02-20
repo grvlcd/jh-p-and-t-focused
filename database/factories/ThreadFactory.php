@@ -19,8 +19,8 @@ class ThreadFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => fake()->sentence(8),
-            'body' => fake()->paragraphs(3, true),
+            'title' => \fake()->sentence(8),
+            'body' => \fake()->paragraphs(3, true),
             'protocol_id' => Protocol::factory(),
             'user_id' => User::factory(),
         ];
