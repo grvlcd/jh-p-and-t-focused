@@ -5,8 +5,10 @@ if (isset($_GET['path']) && is_string($_GET['path'])) {
     $path = '/api/'.trim($_GET['path'], '/');
     $params = $_GET;
     unset($params['path']);
-    $_SERVER['REQUEST_URI'] = $path.(empty($params) ? '' : '?'.http_build_query($params));
-    $_SERVER['QUERY_STRING'] = http_build_query($params);
+    $query = http_build_query($params);
+    $_SERVER['REQUEST_URI'] = $path.(empty($params) ? '' : '?'.$query);
+    $_SERVER['PATH_INFO'] = $path;
+    $_SERVER['QUERY_STRING'] = $query;
     $_GET = $params;
 } elseif (isset($_SERVER['REQUEST_URI']) && (
     $_SERVER['REQUEST_URI'] === '/api/index.php'
