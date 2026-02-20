@@ -17,9 +17,11 @@ class VoteFactory extends Factory
      */
     public function definition(): array
     {
+        $faker = $this->faker ?? \Faker\Factory::create();
+
         return [
             'user_id' => User::factory(),
-            'value' => $this->faker->randomElement([-1, 1]),
+            'value' => $faker->randomElement([-1, 1]),
         ];
     }
 }

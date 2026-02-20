@@ -17,10 +17,12 @@ class ProtocolFactory extends Factory
      */
     public function definition(): array
     {
+        $faker = $this->faker ?? \Faker\Factory::create();
+
         return [
-            'title' => $this->faker->sentence(6),
-            'content' => $this->faker->paragraphs(4, true),
-            'tags' => $this->faker->randomElements(
+            'title' => $faker->sentence(6),
+            'content' => $faker->paragraphs(4, true),
+            'tags' => $faker->randomElements(
                 [
                     'clinical',
                     'survey',
@@ -31,10 +33,10 @@ class ProtocolFactory extends Factory
                     'psychology',
                     'machine-learning',
                 ],
-                $this->faker->numberBetween(2, 4),
+                $faker->numberBetween(2, 4),
             ),
             'author_id' => User::factory(),
-            'rating' => $this->faker->randomFloat(1, 2, 5),
+            'rating' => $faker->randomFloat(1, 2, 5),
         ];
     }
 }

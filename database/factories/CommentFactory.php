@@ -18,8 +18,10 @@ class CommentFactory extends Factory
      */
     public function definition(): array
     {
+        $faker = $this->faker ?? \Faker\Factory::create();
+
         return [
-            'body' => $this->faker->paragraph(),
+            'body' => $faker->paragraph(),
             'thread_id' => Thread::factory(),
             'user_id' => User::factory(),
             'parent_id' => null,

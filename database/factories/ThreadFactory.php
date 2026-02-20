@@ -18,9 +18,11 @@ class ThreadFactory extends Factory
      */
     public function definition(): array
     {
+        $faker = $this->faker ?? \Faker\Factory::create();
+
         return [
-            'title' => $this->faker->sentence(8),
-            'body' => $this->faker->paragraphs(3, true),
+            'title' => $faker->sentence(8),
+            'body' => $faker->paragraphs(3, true),
             'protocol_id' => Protocol::factory(),
             'user_id' => User::factory(),
         ];

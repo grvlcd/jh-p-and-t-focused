@@ -18,11 +18,13 @@ class ReviewFactory extends Factory
      */
     public function definition(): array
     {
+        $faker = $this->faker ?? \Faker\Factory::create();
+
         return [
             'protocol_id' => Protocol::factory(),
             'user_id' => User::factory(),
-            'rating' => $this->faker->numberBetween(1, 5),
-            'feedback' => $this->faker->boolean(70) ? $this->faker->sentences(2, true) : null,
+            'rating' => $faker->numberBetween(1, 5),
+            'feedback' => $faker->boolean(70) ? $faker->sentences(2, true) : null,
         ];
     }
 }
