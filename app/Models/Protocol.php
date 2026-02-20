@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Typesense\TypesenseIndexer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,17 @@ class Protocol extends Model
         'author_id',
         'rating',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function (self $protocol): void {
+            app(TypesenseIndexer::class)->upsertProtocol($protocol);
+        });
+
+        static::deleted(function (self $protocol): void {
+            app(TypesenseIndexer::class)->deleteProtocol((string) $protocol->getKey());
+        });
+    }
 
     /**
      * @return array<string, string>

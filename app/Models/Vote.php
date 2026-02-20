@@ -18,6 +18,8 @@ class Vote extends Model
     protected $fillable = [
         'user_id',
         'value',
+        'votable_id',
+        'votable_type',
     ];
 
     /**

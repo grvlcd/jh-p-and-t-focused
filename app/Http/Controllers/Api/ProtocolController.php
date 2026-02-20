@@ -23,7 +23,14 @@ class ProtocolController extends Controller
         $search = $request->query('search');
 
         if ($search !== null && $search !== '') {
-            $query->where('title', 'like', '%'.$search.'%');
+            $term = '%'.addcslashes($search, '%_\\').'%';
+            $query->where(function ($q) use ($term) {
+                $q->where('title', 'like', $term)
+                    ->orWhereHas('threads', function ($threadQuery) use ($term) {
+                        $threadQuery->where('title', 'like', $term)
+                            ->orWhere('body', 'like', $term);
+                    });
+            });
         }
 
         $sort = $request->query('sort', 'recent');
@@ -36,7 +43,9 @@ class ProtocolController extends Controller
             $query->latest();
         }
 
-        $protocols = $query->paginate();
+        $perPage = min((int) $request->query('per_page', 15), 50);
+        $perPage = $perPage < 1 ? 15 : $perPage;
+        $protocols = $query->paginate($perPage);
 
         return response()->json($protocols);
     }
@@ -62,9 +71,25 @@ class ProtocolController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Protocol $protocol): JsonResponse
+    public function show(Request $request, Protocol $protocol): JsonResponse
     {
         $protocol->load(['author', 'threads', 'reviews']);
+
+        // Load user's votes for threads if authenticated
+        if ($request->user()) {
+            $threadIds = $protocol->threads->pluck('id');
+            $userVotes = \App\Models\Vote::query()
+                ->where('user_id', $request->user()->id)
+                ->where('votable_type', \App\Models\Thread::class)
+                ->whereIn('votable_id', $threadIds)
+                ->get()
+                ->keyBy('votable_id');
+
+            foreach ($protocol->threads as $thread) {
+                $vote = $userVotes->get($thread->id);
+                $thread->user_vote = $vote ? $vote->value : null;
+            }
+        }
 
         return response()->json($protocol);
     }

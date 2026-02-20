@@ -80,8 +80,13 @@ class ThreadController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Thread $thread): JsonResponse
+    public function destroy(Request $request, Thread $thread): JsonResponse
     {
+        $user = $request->user();
+        if (!$user || $thread->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $thread->delete();
 
         return response()->json([], 204);

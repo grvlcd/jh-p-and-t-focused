@@ -16,31 +16,51 @@ class VoteController extends Controller
      */
     public function voteOnThread(StoreVoteRequest $request, Thread $thread): JsonResponse
     {
-        $vote = $this->storeOrUpdateVote($request, $thread);
+        $result = $this->storeOrUpdateVote($request, $thread);
 
-        return response()->json($vote);
+        return response()->json([
+            'value' => $result ? $result->value : null,
+        ]);
     }
 
     public function voteOnComment(StoreVoteRequest $request, Comment $comment): JsonResponse
     {
-        $vote = $this->storeOrUpdateVote($request, $comment);
+        $result = $this->storeOrUpdateVote($request, $comment);
 
-        return response()->json($vote);
+        return response()->json([
+            'value' => $result ? $result->value : null,
+        ]);
     }
 
-    protected function storeOrUpdateVote(StoreVoteRequest $request, Thread|Comment $votable): Vote
+    protected function storeOrUpdateVote(StoreVoteRequest $request, Thread|Comment $votable): ?Vote
     {
         $data = $request->validated();
+        $userId = $request->user()->id;
 
-        return Vote::query()->updateOrCreate(
-            [
-                'user_id' => $request->user()->id,
-                'votable_id' => $votable->id,
-                'votable_type' => $votable::class,
-            ],
-            [
-                'value' => $data['value'],
-            ],
-        );
+        // Check if user already voted
+        $existingVote = Vote::query()
+            ->where('user_id', $userId)
+            ->where('votable_id', $votable->id)
+            ->where('votable_type', $votable::class)
+            ->first();
+
+        if ($existingVote) {
+            // If voting the same value, remove the vote (toggle off)
+            if ($existingVote->value === $data['value']) {
+                $existingVote->delete();
+                return null;
+            }
+            // Otherwise, update the vote value
+            $existingVote->update(['value' => $data['value']]);
+            return $existingVote->fresh();
+        }
+
+        // Create new vote
+        return Vote::query()->create([
+            'user_id' => $userId,
+            'votable_id' => $votable->id,
+            'votable_type' => $votable::class,
+            'value' => $data['value'],
+        ]);
     }
 }

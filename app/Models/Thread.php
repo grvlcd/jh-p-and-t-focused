@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Typesense\TypesenseIndexer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,17 @@ class Thread extends Model
         'protocol_id',
         'user_id',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function (self $thread): void {
+            app(TypesenseIndexer::class)->upsertThread($thread->loadMissing('protocol'));
+        });
+
+        static::deleted(function (self $thread): void {
+            app(TypesenseIndexer::class)->deleteThread((string) $thread->getKey());
+        });
+    }
 
     public function protocol(): BelongsTo
     {

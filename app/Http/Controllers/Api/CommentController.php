@@ -8,17 +8,35 @@ use App\Http\Requests\Comment\UpdateCommentRequest;
 use App\Models\Comment;
 use App\Models\Thread;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CommentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function indexForThread(Thread $thread): JsonResponse
+    public function indexForThread(Request $request, Thread $thread): JsonResponse
     {
         $comments = $thread->comments()
-            ->with(['author', 'children'])
+            ->with(['author'])
+            ->withSum('votes as votes_sum', 'value')
             ->get();
+
+        // Load user's votes for comments if authenticated
+        if ($request->user()) {
+            $commentIds = $comments->pluck('id');
+            $userVotes = \App\Models\Vote::query()
+                ->where('user_id', $request->user()->id)
+                ->where('votable_type', \App\Models\Comment::class)
+                ->whereIn('votable_id', $commentIds)
+                ->get()
+                ->keyBy('votable_id');
+
+            foreach ($comments as $comment) {
+                $vote = $userVotes->get($comment->id);
+                $comment->user_vote = $vote ? $vote->value : null;
+            }
+        }
 
         return response()->json($comments);
     }
@@ -53,8 +71,13 @@ class CommentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Comment $comment): JsonResponse
+    public function destroy(Request $request, Comment $comment): JsonResponse
     {
+        $user = $request->user();
+        if (!$user || $comment->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $comment->delete();
 
         return response()->json([], 204);
