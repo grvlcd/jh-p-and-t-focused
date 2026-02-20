@@ -8,9 +8,22 @@
         }
     },
     "rewrites": [
-        { "source": "/build/(.*)", "destination": "/build/$1" },
-        { "source": "/favicon.ico", "destination": "/favicon.ico" },
-        { "source": "/(.*)", "destination": "/api/index.php" }
+        {
+            "source": "/build/(.*)",
+            "destination": "/build/$1"
+        },
+        {
+            "source": "/favicon.ico",
+            "destination": "/favicon.ico"
+        },
+        {
+            "source": "/api/:path*",
+            "destination": "/api/index.php"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/api/index.php"
+        }
     ],
     "env": {
         "APP_ENV": "production",
